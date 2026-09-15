@@ -1,109 +1,144 @@
-let alpha = "abcdefghijklmnopqrstuvwxyz";
-let alphaArray = alpha.split("");
-let lettersElement = document.querySelector(".letters");
-
-// [1] Create The Alpha Letters  In Document Page
-
-alphaArray.forEach((letter) => {
-  let letterSpan = document.createElement("span");
-  let letterText = document.createTextNode(letter.toUpperCase());
-  letterSpan.appendChild(letterText);
-  letterSpan.classList = "one-letter";
-  lettersElement.appendChild(letterSpan);
-});
-
-let testWords = {
-  names: ["Mohammed", "Yasser", "Omar", "Shaban", "Salama", "Youssef"],
-  "Movie Or Series": [
-    "Friends",
-    "The GodFather",
-    "Harry Potter",
-    "Fast & Furious",
-    "12 Angry Men",
-    "Batman",
-  ],
-  countries: ["Egypt", "Syria", "Palestin", "Yemen", "Oman", "Libya", "Qatar"],
+const WORDS = {
+  Names: ["Mohammed", "Yasser", "Omar", "Salama", "Youssef"],
+  "Movies and Series": ["Friends", "The Godfather", "Harry Potter", "Batman"],
+  Countries: ["Egypt", "Syria", "Palestine", "Yemen", "Oman", "Libya", "Qatar"],
 };
 
-// [2] Create Random Elements
+const MAX_WRONG_GUESSES = 6;
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
-let testWordsKeys = Object.keys(testWords);
-let randomProperty =
-  testWordsKeys[Math.floor(Math.random() * testWordsKeys.length)];
-let randomIndex = Math.floor(Math.random() * testWords[randomProperty].length);
-let randomPropertyValue = testWords[randomProperty][randomIndex];
-let headerSpan = document.querySelector(".guess-word span");
-let spanText = document.createTextNode(randomProperty);
-headerSpan.appendChild(spanText);
+const drawing = document.querySelector(".drawing");
+const categoryElement = document.querySelector(".category");
+const wordElement = document.querySelector(".word");
+const attemptsElement = document.querySelector(".attempts");
+const keyboard = document.querySelector(".keyboard");
+const result = document.querySelector(".result");
+const resultTitle = document.querySelector("#result-title");
+const resultMessage = document.querySelector(".result__message");
+const status = document.querySelector(".status");
+const newGameButton = document.querySelector(".new-game");
+const playAgainButton = document.querySelector(".play-again");
 
-// [3] Create Span Elements For Each Letter In Letter Guess
+let answer = "";
+let guessedLetters = new Set();
+let wrongGuesses = 0;
+let gameOver = false;
 
-let testWordArray = Array.from(randomPropertyValue.toLowerCase());
-let letterGuess = document.querySelector(".letter-guess");
-testWordArray.forEach((letter) => {
-  let spanElemnet = document.createElement("span");
-  if (alphaArray.includes(letter) == false) {
-    if (letter == " ") {
-      spanElemnet.classList.add("space");
-    } else {
-      spanElemnet.classList.add("mark");
-      let mark = document.createTextNode(letter);
-      spanElemnet.appendChild(mark);
-    }
+function randomItem(items) {
+  return items[Math.floor(Math.random() * items.length)];
+}
+
+function chooseWord() {
+  const category = randomItem(Object.keys(WORDS));
+  return { category, word: randomItem(WORDS[category]).toUpperCase() };
+}
+
+function playSound(id) {
+  const sound = document.querySelector(id);
+  sound.currentTime = 0;
+  sound.play().catch(() => {});
+}
+
+function renderKeyboard() {
+  keyboard.replaceChildren(
+    ...alphabet.map((letter) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "key";
+      button.textContent = letter;
+      button.dataset.letter = letter;
+      button.disabled = guessedLetters.has(letter) || gameOver;
+      button.setAttribute("aria-label", `Guess letter ${letter}`);
+      return button;
+    })
+  );
+}
+
+function renderWord() {
+  wordElement.replaceChildren(
+    ...[...answer].map((character) => {
+      const cell = document.createElement("span");
+      if (character === " ") {
+        cell.className = "word__space";
+        cell.setAttribute("aria-hidden", "true");
+      } else {
+        cell.className = "word__letter";
+        cell.textContent = guessedLetters.has(character) ? character : "";
+        cell.setAttribute("aria-label", guessedLetters.has(character) ? character : "hidden letter");
+      }
+      return cell;
+    })
+  );
+}
+
+function renderProgress() {
+  drawing.dataset.wrong = wrongGuesses;
+  const remaining = MAX_WRONG_GUESSES - wrongGuesses;
+  attemptsElement.textContent = `${remaining} incorrect ${remaining === 1 ? "guess" : "guesses"} remaining`;
+}
+
+function hasWon() {
+  return [...answer].every((character) => character === " " || guessedLetters.has(character));
+}
+
+function finishGame(won) {
+  gameOver = true;
+  result.hidden = false;
+  resultTitle.textContent = won ? "You won!" : "Game over";
+  resultMessage.textContent = won
+    ? `You discovered “${answer}”.`
+    : `The word was “${answer}”.`;
+  playSound(won ? "#win-sound" : "#lose-sound");
+  renderKeyboard();
+  playAgainButton.focus();
+}
+
+function guess(letter) {
+  if (gameOver || guessedLetters.has(letter) || !alphabet.includes(letter)) return;
+
+  guessedLetters.add(letter);
+
+  if (answer.includes(letter)) {
+    playSound("#success-sound");
+    status.textContent = `${letter} is correct.`;
   } else {
-    spanElemnet.classList.add("normal-letter");
+    wrongGuesses += 1;
+    playSound("#fail-sound");
+    status.textContent = `${letter} is not in the word.`;
   }
-  letterGuess.appendChild(spanElemnet);
+
+  renderWord();
+  renderKeyboard();
+  renderProgress();
+
+  if (hasWon()) finishGame(true);
+  else if (wrongGuesses >= MAX_WRONG_GUESSES) finishGame(false);
+}
+
+function startGame() {
+  const selection = chooseWord();
+  answer = selection.word;
+  categoryElement.textContent = selection.category;
+  guessedLetters = new Set();
+  wrongGuesses = 0;
+  gameOver = false;
+  result.hidden = true;
+  status.textContent = "A new game has started.";
+  renderWord();
+  renderKeyboard();
+  renderProgress();
+}
+
+keyboard.addEventListener("click", (event) => {
+  const button = event.target.closest(".key");
+  if (button) guess(button.dataset.letter);
 });
 
-// [4] Make The Influence on Letters When Clicking On It
-
-let lettersElements = document.querySelectorAll(".letters span");
-console.log(testWordArray);
-console.log(lettersElements);
-let attempts = 0;
-let theTrue = 0;
-lettersElements.forEach((el) => {
-  el.addEventListener("click", (e) => {
-    if (testWordArray.includes(e.target.innerHTML.toLowerCase())) {
-      let letterGuessSpans = document.querySelectorAll(".letter-guess span");
-      for (let i = 0; i < testWordArray.length; i++) {
-        if (testWordArray[i] === e.target.innerHTML.toLowerCase()) {
-          let currentSpan = letterGuessSpans[i];
-          theTrue++;
-          if (theTrue < testWordArray.length) {
-            document.getElementById("success").play();
-          } else if (theTrue == testWordArray.length) {
-            document.getElementById("congratulation").play();
-          }
-          if (currentSpan.innerHTML === "") {
-            currentSpan.innerHTML = e.target.innerHTML;
-            testWordArray[i] = "";
-            console.log(testWordArray);
-            if (
-              !testWordArray.includes(currentSpan.innerHTML.toLocaleLowerCase())
-            ) {
-              console.log("Finish");
-              e.target.classList.add("finish");
-              e.target.classList.remove("one-letter");
-            }
-            break; // Exit loop after revealing one letter
-          }
-        }
-      }
-    } else {
-      e.target.classList.add("finish");
-      e.target.classList.remove("one-letter");
-      attempts++;
-      draw.classList.add(`wrong-${attempts}`);
-      if (attempts < 9) {
-        document.getElementById("fail").play();
-      } else if (attempts == 9) {
-        document.getElementById("gameover").play();
-      }
-    }
-  });
+document.addEventListener("keydown", (event) => {
+  if (/^[a-z]$/i.test(event.key)) guess(event.key.toUpperCase());
 });
 
-// [5] Appear The Draw Parts
-let draw = document.querySelector(".draw");
+newGameButton.addEventListener("click", startGame);
+playAgainButton.addEventListener("click", startGame);
+
+startGame();

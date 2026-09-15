@@ -1,45 +1,60 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css" />
-    <link rel="icon" type="image/png" href="audio" />
-
-    <title>Hangman</title>
-  </head>
-  <body>
-    <header>
-      <p class="game-name">Hangman Game</p>
-      <div class="guess-word">
-        <p>Word From:</p>
-        <span></span>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A responsive and keyboard-accessible Hangman game built with vanilla JavaScript.">
+  <link rel="stylesheet" href="style.css">
+  <title>Hangman Game | JavaScript Project</title>
+</head>
+<body>
+  <main class="game">
+    <header class="game__header">
+      <div>
+        <p class="eyebrow">Vanilla JavaScript Game</p>
+        <h1>Hangman</h1>
       </div>
+      <button class="new-game" type="button">New game</button>
     </header>
-    <main>
-      <div class="row">
-        <div class="hangman-draw">
-          <div class="draw">
-            <div class="stand"></div>
-            <div class="hang"></div>
-            <div class="rope"></div>
-            <div class="man">
-              <div class="head"></div>
-              <div class="body"></div>
-              <div class="hands"></div>
-              <div class="legs"></div>
-            </div>
-          </div>
+
+    <section class="game__panel" aria-labelledby="category-title">
+      <div class="drawing" aria-hidden="true">
+        <div class="gallows"></div>
+        <div class="person">
+          <span class="head"></span>
+          <span class="body"></span>
+          <span class="arm arm--left"></span>
+          <span class="arm arm--right"></span>
+          <span class="leg leg--left"></span>
+          <span class="leg leg--right"></span>
         </div>
-        <div class="letters"></div>
       </div>
-      <div class="letter-guess"></div>
-    </main>
-    <audio id="congratulation" src="audio/congratulations.mp3"></audio>
-    <audio id="gameover" src="audio/gameover.mp3"></audio>
-    <audio id="fail" src="audio/fail.mp3"></audio>
-    <audio id="success" src="audio/success.mp3"></audio>
-    <script src="main.js"></script>
-  </body>
+
+      <div class="play-area">
+        <p class="category-label">Category</p>
+        <h2 id="category-title" class="category"></h2>
+        <div class="word" aria-label="Word to guess"></div>
+        <p class="attempts" aria-live="polite"></p>
+        <div class="keyboard" aria-label="Letter keyboard"></div>
+      </div>
+    </section>
+
+    <section class="result" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
+      <div class="result__card">
+        <p class="result__label">Game finished</p>
+        <h2 id="result-title"></h2>
+        <p class="result__message"></p>
+        <button class="play-again" type="button">Play again</button>
+      </div>
+    </section>
+
+    <p class="sr-only status" role="status" aria-live="polite"></p>
+  </main>
+
+  <audio id="win-sound" src="audio/congratulations.mp3"></audio>
+  <audio id="lose-sound" src="audio/gameover.mp3"></audio>
+  <audio id="fail-sound" src="audio/fail.mp3"></audio>
+  <audio id="success-sound" src="audio/success.mp3"></audio>
+  <script src="main.js"></script>
+</body>
 </html>
